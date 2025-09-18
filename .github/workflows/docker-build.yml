@@ -18,6 +18,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Make build.sh executable
+        run: chmod +x build.sh
 
       - name: Build & Push all images
         run: ./build.sh
+        env:
+          REGISTRY: ghcr.io
+          NAMESPACE: prasanth595
