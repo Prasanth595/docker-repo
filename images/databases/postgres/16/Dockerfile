@@ -1,5 +1,5 @@
 FROM postgres:16
-LABEL maintainer="you@example.com"
+LABEL maintainer="prasanth9566607@gmail.com"
 ENV POSTGRES_USER=admin \
     POSTGRES_PASSWORD=admin \
     POSTGRES_DB=mydb
