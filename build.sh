@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REGISTRY="ghcr.io/prasanth595"   # or Docker Hub
+REGISTRY="ghcr.io/prasanth595/docker-repo"   # or Docker Hub
 ROOT_DIR="images"
 
 # Find all Dockerfiles recursively
