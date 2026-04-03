@@ -14,6 +14,11 @@ for ROOT_DIR in "${ROOT_DIRS[@]}"; do
 
     # Find all Dockerfiles recursively under each root
     find "$ROOT_DIR" -name "Dockerfile" | while read -r dockerfile; do
+        if [ -n "$SKIP_WINDOWS" ] && [[ "$dockerfile" == */windows/* ]]; then
+            echo "⏭️ Skipping Windows image on non-Windows runner: $dockerfile"
+            continue
+        fi
+
         # Example: images/linux/ubuntu/22.04/Dockerfile -> linux/ubuntu/22.04
         image_path=$(dirname "${dockerfile#"$ROOT_DIR/"}")
         image_name=$(echo "$image_path" | tr '/' '-')

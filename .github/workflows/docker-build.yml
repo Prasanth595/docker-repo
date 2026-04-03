@@ -22,8 +22,8 @@ jobs:
       - name: Make build.sh executable
         run: chmod +x build.sh
 
-      - name: Build all images (no push)
-        run: SKIP_PUSH=1 ./build.sh
+      - name: Build all images (no push, Linux-only)
+        run: SKIP_PUSH=1 SKIP_WINDOWS=1 ./build.sh
         env:
           REGISTRY: ghcr.io
           NAMESPACE: prasanth595
@@ -55,7 +55,7 @@ jobs:
 
       - name: Push all images
         if: steps.trivy-scan.conclusion == 'success'
-        run: PUSH_ONLY=1 ./build.sh
+        run: PUSH_ONLY=1 SKIP_WINDOWS=1 ./build.sh
         env:
           REGISTRY: ghcr.io
           NAMESPACE: prasanth595
