@@ -40,9 +40,18 @@ jobs:
             image_name=$(echo "$image_path" | tr '/' '-')
             image_ref="${{ env.REGISTRY }}/${{ env.NAMESPACE }}/$image_name:latest"
             echo "Scanning $image_ref"
+            if ! docker image inspect "$image_ref" >/dev/null 2>&1; then
+              echo "Image not found locally: $image_ref"
+              if docker pull "$image_ref" >/dev/null 2>&1; then
+                echo "Pulled remote image: $image_ref"
+              else
+                echo "Skipping scan for missing image: $image_ref"
+                continue
+              fi
+            fi
             docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${{ github.workspace }}/reports":/reports aquasec/trivy:0.69.3 image --severity HIGH,CRITICAL --exit-code 0 --format json --output /reports/${image_name}.json "$image_ref" || scan_failed=1
           done
-          exit 0
+          exit $scan_failed
           } | tee scan.log
         env:
           REGISTRY: ghcr.io
