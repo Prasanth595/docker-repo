@@ -38,7 +38,12 @@ docker-repo/
 │   │   ├── java/21/Dockerfile
 │   │   ├── node/20/Dockerfile
 │   │   ├── go/1.22/Dockerfile
-│   │   └── tools/Dockerfile
+│   │   ├── bundler/Dockerfile
+│   │   ├── ccache/Dockerfile
+│   │   ├── docker-cli/Dockerfile
+│   │   ├── gradle/Dockerfile
+│   │   ├── nuget/Dockerfile
+│   │   └── composer/Dockerfile
 │   │
 │   └── databases/
 │       ├── postgres/16/Dockerfile
