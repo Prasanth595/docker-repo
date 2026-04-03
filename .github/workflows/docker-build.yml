@@ -40,7 +40,7 @@ jobs:
             image_name=$(echo "$image_path" | tr '/' '-')
             image_ref="${{ env.REGISTRY }}/${{ env.NAMESPACE }}/$image_name:latest"
             echo "Scanning $image_ref"
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${{ github.workspace }}/reports":/reports aquasec/trivy:0.69.3 image --severity HIGH,CRITICAL --exit-code 0 --format json --output /reports/${image_name}.json --format html --output /reports/${image_name}.html "$image_ref" || scan_failed=1
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${{ github.workspace }}/reports":/reports aquasec/trivy:0.69.3 image --severity HIGH,CRITICAL --exit-code 0 --format json --output /reports/${image_name}.json "$image_ref" || scan_failed=1
           done
           exit 0
           } | tee scan.log
