@@ -48,7 +48,11 @@ docker-repo/
 │   └── databases/
 │       ├── postgres/16/Dockerfile
 │       ├── mysql/8/Dockerfile
-│       └── redis/7/Dockerfile
+│       ├── redis/7/Dockerfile
+│       └── oracle/
+│           ├── 19.3.0/Dockerfile
+│           ├── 21.3.0/Dockerfile
+│           └── 23.2.0/Dockerfile
 ```
 
 ## Usage
