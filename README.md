@@ -79,6 +79,7 @@ The build script:
 - Runs on push to main or manual dispatch
 - Logs in to registry
 - Builds and pushes all images
+- Generates Trivy scan reports and publishes them as HTML through GitHub Pages for direct browser viewing
 
 ---
 
