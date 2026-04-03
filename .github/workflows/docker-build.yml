@@ -1,4 +1,4 @@
-name: Build & Push Docker Images
+name: Build, Scan & Push Docker Images
 
 on:
   push:
@@ -18,11 +18,44 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.CR_PAT }}
+
       - name: Make build.sh executable
         run: chmod +x build.sh
 
-      - name: Build & Push all images
-        run: ./build.sh
+      - name: Build all images (no push)
+        run: SKIP_PUSH=1 ./build.sh
+        env:
+          REGISTRY: ghcr.io
+          NAMESPACE: prasanth595
+
+      - name: Scan built images
+        id: trivy-scan
+        continue-on-error: true
+        run: |
+          mkdir -p reports
+          scan_failed=0
+          find images -name Dockerfile | while read -r dockerfile; do
+            image_path=$(dirname "${dockerfile#images/}")
+            image_name=$(echo "$image_path" | tr '/' '-')
+            image_ref="${{ env.REGISTRY }}/${{ env.NAMESPACE }}/$image_name:latest"
+            echo "Scanning $image_ref"
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${{ github.workspace }}/reports":/reports aquasec/trivy:latest image --severity HIGH,CRITICAL --format json --output /reports/${image_name}.json "$image_ref" || scan_failed=1
+          done
+          exit $scan_failed
+        env:
+          REGISTRY: ghcr.io
+          NAMESPACE: prasanth595
+
+      - name: Upload scan reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-reports
+          path: reports
+
+      - name: Push all images
+        if: steps.trivy-scan.conclusion == 'success'
+        run: PUSH_ONLY=1 ./build.sh
         env:
           REGISTRY: ghcr.io
           NAMESPACE: prasanth595
