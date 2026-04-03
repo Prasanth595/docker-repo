@@ -37,7 +37,8 @@ docker-repo/
 │   │   ├── python/3.11/Dockerfile
 │   │   ├── java/21/Dockerfile
 │   │   ├── node/20/Dockerfile
-│   │   └── go/1.22/Dockerfile
+│   │   ├── go/1.22/Dockerfile
+│   │   └── tools/Dockerfile
 │   │
 │   └── databases/
 │       ├── postgres/16/Dockerfile
