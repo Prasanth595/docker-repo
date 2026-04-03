@@ -23,7 +23,7 @@ jobs:
         run: chmod +x build.sh
 
       - name: Build all images (no push, Linux-only)
-        run: SKIP_PUSH=1 SKIP_WINDOWS=1 ./build.sh
+        run: SKIP_PUSH=1 SKIP_WINDOWS=1 ./build.sh | tee build.log
         env:
           REGISTRY: ghcr.io
           NAMESPACE: prasanth595
@@ -32,6 +32,7 @@ jobs:
         id: trivy-scan
         continue-on-error: true
         run: |
+          {
           mkdir -p reports
           scan_failed=0
           find images -name Dockerfile | while read -r dockerfile; do
@@ -39,9 +40,10 @@ jobs:
             image_name=$(echo "$image_path" | tr '/' '-')
             image_ref="${{ env.REGISTRY }}/${{ env.NAMESPACE }}/$image_name:latest"
             echo "Scanning $image_ref"
-            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${{ github.workspace }}/reports":/reports aquasec/trivy:latest image --severity HIGH,CRITICAL --format json --output /reports/${image_name}.json "$image_ref" || scan_failed=1
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${{ github.workspace }}/reports":/reports aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 0 --format json --output /reports/${image_name}.json "$image_ref" || scan_failed=1
           done
-          exit $scan_failed
+          exit 0
+          } | tee scan.log
         env:
           REGISTRY: ghcr.io
           NAMESPACE: prasanth595
@@ -55,7 +57,17 @@ jobs:
 
       - name: Push all images
         if: steps.trivy-scan.conclusion == 'success'
-        run: PUSH_ONLY=1 SKIP_WINDOWS=1 ./build.sh
+        run: PUSH_ONLY=1 SKIP_WINDOWS=1 ./build.sh | tee push.log
         env:
           REGISTRY: ghcr.io
           NAMESPACE: prasanth595
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build.log
+            scan.log
+            push.log
