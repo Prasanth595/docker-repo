@@ -20,6 +20,10 @@ docker-repo/
 │   │   ├── debian/12/Dockerfile
 │   │   ├── redhat/9/Dockerfile
 │   │   ├── centos/7/Dockerfile
+│   │   ├── fedora/40/Dockerfile
+│   │   ├── arch/latest/Dockerfile
+│   │   ├── gentoo/stage3-amd64/Dockerfile
+│   │   ├── slackware/15.0/Dockerfile
 │   │   └── alpine/3.19/Dockerfile
 │   │
 │   ├── windows/
