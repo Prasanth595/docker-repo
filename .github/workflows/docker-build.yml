@@ -40,7 +40,7 @@ jobs:
           find images -name Dockerfile | while read -r dockerfile; do
             image_path=$(dirname "${dockerfile#images/}")
             image_name=$(echo "$image_path" | tr '/' '-')
-            image_ref="${{ env.REGISTRY }}/${{ env.NAMESPACE }}/$image_name:latest"
+            image_ref="${{ env.REGISTRY }}/${{ env.NAMESPACE }}/docker-repo/$image_name:latest"
             echo "Scanning $image_ref"
             if ! docker image inspect "$image_ref" >/dev/null 2>&1; then
               echo "Image not found locally: $image_ref"

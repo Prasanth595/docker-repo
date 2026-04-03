@@ -3,8 +3,10 @@ set -e
 
 DEFAULT_REGISTRY="ghcr.io"
 DEFAULT_NAMESPACE="prasanth595"
+DEFAULT_REPOSITORY="docker-repo"
 REGISTRY="${REGISTRY:-$DEFAULT_REGISTRY}"
 NAMESPACE="${NAMESPACE:-$DEFAULT_NAMESPACE}"
+REPOSITORY="${REPOSITORY:-$DEFAULT_REPOSITORY}"
 ROOT_DIRS=("images")
 
 for ROOT_DIR in "${ROOT_DIRS[@]}"; do
@@ -22,7 +24,11 @@ for ROOT_DIR in "${ROOT_DIRS[@]}"; do
         # Example: images/linux/ubuntu/22.04/Dockerfile -> linux/ubuntu/22.04
         image_path=$(dirname "${dockerfile#"$ROOT_DIR/"}")
         image_name=$(echo "$image_path" | tr '/' '-')
-        image_ref="$REGISTRY/$NAMESPACE/$image_name:latest"
+        if [ -n "$REPOSITORY" ]; then
+            image_ref="$REGISTRY/$NAMESPACE/$REPOSITORY/$image_name:latest"
+        else
+            image_ref="$REGISTRY/$NAMESPACE/$image_name:latest"
+        fi
 
         if [ -n "$PUSH_ONLY" ]; then
             echo "📦 Pushing $image_ref"
