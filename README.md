@@ -24,7 +24,20 @@ docker-repo/
 │   │   ├── arch/latest/Dockerfile
 │   │   ├── gentoo/stage3-amd64/Dockerfile
 │   │   ├── slackware/15.0/Dockerfile
-│   │   └── alpine/3.19/Dockerfile
+│   │   ├── alpine/3.19/Dockerfile
+│   │   └── heroku/
+│   │       ├── 20/Dockerfile
+│   │       ├── 20-build/Dockerfile
+│   │       ├── 20-cnb/Dockerfile
+│   │       ├── 20-cnb-build/Dockerfile
+│   │       ├── 22/Dockerfile
+│   │       ├── 22-build/Dockerfile
+│   │       ├── 22-cnb/Dockerfile
+│   │       ├── 22-cnb-build/Dockerfile
+│   │       ├── 24/Dockerfile
+│   │       ├── 24-build/Dockerfile
+│   │       ├── 26/Dockerfile
+│   │       └── 26-build/Dockerfile
 │   │
 │   ├── windows/
 │   │   ├── servercore/2022/Dockerfile
