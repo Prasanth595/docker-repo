@@ -39,6 +39,13 @@ docker-repo/
 │       ├── postgres/16/Dockerfile
 │       ├── mysql/8/Dockerfile
 │       └── redis/7/Dockerfile
+│
+└── others/
+    ├── windows/
+    │   ├── servercore/2022/Dockerfile
+    │   └── nanoserver/2022/Dockerfile
+    └── macos/
+        └── base/12/Dockerfile
 ```
 
 ## Usage
@@ -52,7 +59,7 @@ docker build -t my-registry/ubuntu-22.04:latest images/linux/ubuntu/22.04
 ./build.sh
 ```
 The build script:
-- Finds all Dockerfiles under images/
+- Finds all Dockerfiles under images/ and others/
 - Builds each image
 - Tags images based on folder names
 - Pushes them to the configured registry
