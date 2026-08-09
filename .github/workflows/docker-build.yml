@@ -1,4 +1,4 @@
-name: Build & Push Docker Images
+name: Build, Scan & Push Docker Images
 
 on:
   push:
@@ -8,21 +8,161 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Log in to registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.CR_PAT }}
+
       - name: Make build.sh executable
         run: chmod +x build.sh
 
-      - name: Build & Push all images
-        run: ./build.sh
+      - name: Build all images (no push, Linux-only)
+        run: SKIP_PUSH=1 SKIP_WINDOWS=1 ./build.sh | tee build.log
         env:
           REGISTRY: ghcr.io
           NAMESPACE: prasanth595
+
+      - name: Scan built images
+        id: trivy-scan
+        continue-on-error: true
+        run: |
+          {
+          mkdir -p reports
+          scan_failed=0
+          find images -name Dockerfile | while read -r dockerfile; do
+            image_path=$(dirname "${dockerfile#images/}")
+            image_name=$(echo "$image_path" | tr '/' '-')
+            image_ref="${{ env.REGISTRY }}/${{ env.NAMESPACE }}/docker-repo/$image_name:latest"
+            echo "Scanning $image_ref"
+            if ! docker image inspect "$image_ref" >/dev/null 2>&1; then
+              echo "Image not found locally: $image_ref"
+              if docker pull "$image_ref" >/dev/null 2>&1; then
+                echo "Pulled remote image: $image_ref"
+              else
+                echo "Skipping scan for missing image: $image_ref"
+                continue
+              fi
+            fi
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "${{ github.workspace }}/reports":/reports aquasec/trivy:0.69.3 image --severity HIGH,CRITICAL --exit-code 0 --format json --output /reports/${image_name}.json "$image_ref" || scan_failed=1
+          done
+          exit $scan_failed
+          } | tee scan.log
+        env:
+          REGISTRY: ghcr.io
+          NAMESPACE: prasanth595
+
+      - name: Upload scan reports
+        if: always()
+        uses: actions/upload-artifact@v4.0.0
+        with:
+          name: trivy-reports
+          path: reports
+
+      - name: Generate HTML scan reports
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import html
+
+          reports = pathlib.Path('reports')
+          reports.mkdir(exist_ok=True)
+
+          for path in sorted(reports.glob('*.json')):
+              data = json.loads(path.read_text(encoding='utf-8'))
+              artifact = data.get('Artifact') or {}
+              name = artifact.get('Name') or data.get('ArtifactName', path.stem)
+              metadata = data.get('Metadata', {})
+              scan_time = metadata.get('ScanStartedAt', '')
+              results = data.get('Results', [])
+
+              rows = []
+              for result in results:
+                  target = html.escape(result.get('Target', ''))
+                  vulns = result.get('Vulnerabilities') or []
+                  if not vulns:
+                      rows.append(f'<tr><td>{target}</td><td colspan="6">No vulnerabilities found</td></tr>')
+                      continue
+                  for vuln in vulns:
+                      rows.append(
+                          '<tr>' +
+                          f'<td>{target}</td>' +
+                          f'<td>{html.escape(vuln.get("VulnerabilityID", ""))}</td>' +
+                          f'<td>{html.escape(vuln.get("PkgName", ""))}</td>' +
+                          f'<td>{html.escape(vuln.get("InstalledVersion", ""))}</td>' +
+                          f'<td>{html.escape(vuln.get("FixedVersion", ""))}</td>' +
+                          f'<td>{html.escape(vuln.get("Severity", ""))}</td>' +
+                          f'<td>{html.escape(vuln.get("Title", ""))}</td>' +
+                          '</tr>'
+                      )
+
+              html_content = f'''<!DOCTYPE html>
+              <html>
+              <head>
+              <meta charset="utf-8">
+              <title>Trivy Report - {html.escape(name)}</title>
+              <style>
+              body {{ font-family: Arial, sans-serif; margin: 24px; }}
+              h1 {{ font-size: 24px; }}
+              table {{ width: 100%; border-collapse: collapse; margin-top: 16px; }}
+              th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+              th {{ background: #f4f4f4; }}
+              </style>
+              </head>
+              <body>
+              <h1>Trivy Report</h1>
+              <p><strong>Image:</strong> {html.escape(name)}</p>
+              <p><strong>Scanned:</strong> {html.escape(scan_time)}</p>
+              <table>
+              <thead>
+              <tr><th>Target</th><th>ID</th><th>Package</th><th>Installed</th><th>Fixed</th><th>Severity</th><th>Title</th></tr>
+              </thead>
+              <tbody>
+              {''.join(rows) if rows else '<tr><td colspan="7">No vulnerabilities or results found</td></tr>'}
+              </tbody>
+              </table>
+              </body>
+              </html>'''
+              html_path = path.with_suffix('.html')
+              html_path.write_text(html_content, encoding='utf-8')
+          PY
+
+      - name: Configure GitHub Pages
+        if: always()
+        uses: actions/configure-pages@v4.0.0
+
+      - name: Upload Pages artifact
+        if: always()
+        uses: actions/upload-pages-artifact@v4.0.0
+        with:
+          path: reports
+
+      - name: Deploy GitHub Pages
+        if: always()
+        uses: actions/deploy-pages@v2.0.0
+
+      - name: Push all images
+        if: steps.trivy-scan.conclusion == 'success'
+        run: PUSH_ONLY=1 SKIP_WINDOWS=1 ./build.sh | tee push.log
+        env:
+          REGISTRY: ghcr.io
+          NAMESPACE: prasanth595
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4.0.0
+        with:
+          name: build-logs
+          path: |
+            build.log
+            scan.log
+            push.log
