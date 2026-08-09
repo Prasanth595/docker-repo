@@ -1,4 +1,4 @@
-﻿# Fedora 40 base image
+# Fedora 40 base image
 FROM fedora:40
 
 RUN dnf install -y --setopt=tsflags=nodocs \
