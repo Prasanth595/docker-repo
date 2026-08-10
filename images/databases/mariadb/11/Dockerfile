@@ -1,4 +1,4 @@
-﻿# MariaDB 11 base image
+# MariaDB 11 base image
 FROM mariadb:11
 
 ENV MARIADB_ROOT_PASSWORD=root \

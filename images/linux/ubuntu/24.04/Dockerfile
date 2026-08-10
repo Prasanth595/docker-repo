@@ -1,4 +1,4 @@
-﻿# Ubuntu 24.04 LTS base image
+# Ubuntu 24.04 LTS base image
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive

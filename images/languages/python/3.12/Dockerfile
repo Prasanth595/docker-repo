@@ -1,4 +1,4 @@
-﻿# Python 3.12 base image
+# Python 3.12 base image
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

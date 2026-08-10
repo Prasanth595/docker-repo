@@ -1,0 +1,13 @@
+# Normalize all text files to LF in the repository (no BOM, no CRLF).
+# Prevents Dockerfile parse failures and shell script breakage on Linux CI.
+* text=auto eol=lf
+
+# Explicitly binary (if added later):
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz binary
+*.pdf binary

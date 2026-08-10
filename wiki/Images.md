@@ -1,4 +1,4 @@
-﻿# Images
+# Images
 
 Complete catalog of every base image in this repository (`images/**/Dockerfile`).
 
